@@ -297,13 +297,17 @@ ExtractTextPlugin.prototype.apply = function(compiler) {
 					});
 					var chunk = extractedChunk.originalChunk;
 					var source = this.renderExtractedChunk(extractedChunk);
-					var file = compilation.getPath(filename, {
-						chunk: chunk
-					}).replace(/\[(?:(\w+):)?contenthash(?::([a-z]+\d*))?(?::(\d+))?\]/ig, function() {
-						return loaderUtils.getHashDigest(source.source(), arguments[1], arguments[2], parseInt(arguments[3], 10));
+					source.children.forEach(function(item, index){
+						var s = new ConcatSource();
+						s.add(item);
+						var file = compilation.getPath(filename, {
+							chunk: chunk
+						}).replace(/\[(?:(\w+):)?contenthash(?::([a-z]+\d*))?(?::(\d+))?\]/ig, function() {
+							return loaderUtils.getHashDigest(s.source(), arguments[1], arguments[2], parseInt(arguments[3], 10));
+						});
+						compilation.assets[file] = s;
+						chunk.files.push(file);
 					});
-					compilation.assets[file] = source;
-					chunk.files.push(file);
 				}
 			}, this);
 			callback();
